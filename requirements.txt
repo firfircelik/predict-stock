@@ -1,8 +1,0 @@
-flask
-pandas
-yfinance
-scikit-learn
-plotly
-requests
-python-dotenv
-textblobnewsapi-python
