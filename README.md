@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-# predict-stock
-=======
 # BIST Stock Prediction Application
 
 This application provides price predictions for stocks listed on Borsa Istanbul (BIST). Using machine learning models and sentiment analysis, it offers future price predictions and investment recommendations for selected stocks.
@@ -74,4 +71,3 @@ We welcome contributions! Please open an issue to discuss your changes before su
 ## License
 
 This project is licensed under the MIT License. See the `LICENSE` file for more information.
->>>>>>> 20ce4e99 (chore: adding v1 files)
