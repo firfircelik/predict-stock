@@ -15,38 +15,85 @@
             background-color: #f8f9fa;
         }
         .container {
-            max-width: 1000px;
-            margin-top: 30px;
+            max-width: 900px;
+            margin-top: 50px;
         }
         h1 {
             color: #007bff;
             margin-bottom: 30px;
-        }
-        #results {
-            margin-top: 20px;
-        }
-        .graph {
-            margin-top: 30px;
+            text-shadow: 1px 1px 1px #fff;
         }
         .select2-container {
             width: 100% !important;
         }
+        .btn-primary {
+            width: 100%;
+            padding: 12px;
+            font-size: 1.2em;
+        }
+        #results {
+            margin-top: 30px;
+        }
+        .card {
+            margin-bottom: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
         .sentiment-positive {
-            color: green;
+            color: #28a745;
+            font-weight: bold;
         }
         .sentiment-negative {
-            color: red;
+            color: #dc3545;
+            font-weight: bold;
         }
         .sentiment-neutral {
-            color: gray;
+            color: #6c757d;
+            font-weight: bold;
+        }
+        .graph {
+            height: 300px;
         }
     </style>
 </head>
 <body>
     <div class="container">
+        <div class="language-selector mb-4">
+            <label for="language-select">Select Language / Dil Seçin:</label>
+            <select id="language-select" class="form-control">
+                <option value="tr">Türkçe</option>
+                <option value="en">English</option>
+                <option value="fr">Français</option>
+                <option value="de">Deutsch</option>
+            </select>
+        </div>
         <h1 class="text-center">BIST Hisse Senedi Tahmin Uygulaması</h1>
+
+        <!-- Filter and Sort UI -->
+        <div class="d-flex justify-content-between mb-4">
+            <div class="form-group">
+                <label for="filter-sentiment" class="form-label">Duygu Analizi Filtrele:</label>
+                <select id="filter-sentiment" class="form-control">
+                    <option value="all">Tümü</option>
+                    <option value="positive">Pozitif</option>
+                    <option value="neutral">Nötr</option>
+                    <option value="negative">Negatif</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="sort-change" class="form-label">Değişim Sıralaması:</label>
+                <select id="sort-change" class="form-control">
+                    <option value="none">Sıralama Yok</option>
+                    <option value="asc">Artan</option>
+                    <option value="desc">Azalan</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Stock Symbols Form -->
         <form id="predict-form" class="mb-4">
             <div class="form-group">
+                <label for="symbols" class="form-label">Hisse Senetlerini Seçin:</label>
                 <select class="form-control" id="symbols" name="symbols[]" multiple="multiple" required>
                     {% for symbol, company in stocks.items() %}
                     <option value="{{ symbol }}">{{ symbol }} - {{ company }}</option>
@@ -55,16 +102,116 @@
             </div>
             <button class="btn btn-primary mt-3" type="submit">Tahmin Et</button>
         </form>
+
+        <!-- Chart Metric Selector -->
+        <div class="form-group">
+            <label for="chart-metric" class="form-label">Grafik Ölçütü:</label>
+            <select id="chart-metric" class="form-control">
+                <option value="last_price">Son Fiyat</option>
+                <option value="prediction">Tahmin Edilen Fiyat</option>
+                <option value="change">Değişim (%)</option>
+            </select>
+        </div>
+
+        <!-- Results Section -->
         <div id="results"></div>
     </div>
 
     <script>
+        const translations = {
+            tr: {
+                title: "BIST Hisse Senedi Tahmin Uygulaması",
+                filterSentiment: "Duygu Analizi Filtrele:",
+                sortChange: "Değişim Sıralaması:",
+                selectStocks: "Hisse Senetlerini Seçin:",
+                predict: "Tahmin Et",
+                lastPrice: "Son Fiyat:",
+                predictedPrice: "Tahmin Edilen Fiyat:",
+                change: "Değişim:",
+                forecast: "Öngörü:",
+                sentimentAnalysis: "Duygu Analizi:",
+                chartMetric: "Grafik Ölçütü:",
+                positive: "Pozitif",
+                neutral: "Nötr",
+                negative: "Negatif",
+                all: "Tümü",
+                noSort: "Sıralama Yok",
+                ascending: "Artan",
+                descending: "Azalan"
+            },
+            en: {
+                title: "BIST Stock Prediction Application",
+                filterSentiment: "Filter Sentiment:",
+                sortChange: "Sort by Change:",
+                selectStocks: "Select Stocks:",
+                predict: "Predict",
+                lastPrice: "Last Price:",
+                predictedPrice: "Predicted Price:",
+                change: "Change:",
+                forecast: "Forecast:",
+                sentimentAnalysis: "Sentiment Analysis:",
+                chartMetric: "Chart Metric:",
+                positive: "Positive",
+                neutral: "Neutral",
+                negative: "Negative",
+                all: "All",
+                noSort: "No Sorting",
+                ascending: "Ascending",
+                descending: "Descending"
+            },
+            fr: {
+                title: "Application de Prédiction des Actions BIST",
+                filterSentiment: "Filtrer le Sentiment:",
+                sortChange: "Trier par Changement:",
+                selectStocks: "Sélectionner les Actions:",
+                predict: "Prédire",
+                lastPrice: "Dernier Prix:",
+                predictedPrice: "Prix Prédit:",
+                change: "Changement:",
+                forecast: "Prévision:",
+                sentimentAnalysis: "Analyse de Sentiment:",
+                chartMetric: "Métrique du Graphique:",
+                positive: "Positif",
+                neutral: "Neutre",
+                negative: "Négatif",
+                all: "Tous",
+                noSort: "Pas de Tri",
+                ascending: "Croissant",
+                descending: "Décroissant"
+            },
+            de: {
+                title: "BIST Aktienvorhersage-Anwendung",
+                filterSentiment: "Stimmung filtern:",
+                sortChange: "Nach Änderung sortieren:",
+                selectStocks: "Aktien auswählen:",
+                predict: "Vorhersagen",
+                lastPrice: "Letzter Preis:",
+                predictedPrice: "Vorhergesagter Preis:",
+                change: "Änderung:",
+                forecast: "Prognose:",
+                sentimentAnalysis: "Stimmungsanalyse:",
+                chartMetric: "Diagramm-Metrik:",
+                positive: "Positiv",
+                neutral: "Neutral",
+                negative: "Negativ",
+                all: "Alle",
+                noSort: "Keine Sortierung",
+                ascending: "Aufsteigend",
+                descending: "Absteigend"
+            }
+        };
+
         $(document).ready(function() {
+            let resultsData = [];
+
+            // Initialize Select2 for stock symbols
             $('#symbols').select2({
                 placeholder: "Hisse senetlerini seçin",
-                allowClear: true
+                allowClear: true,
+                width: '100%'
             });
 
+            // Form submission handler
             $('#predict-form').submit(function(e) {
                 e.preventDefault();
                 $.ajax({
@@ -76,27 +223,8 @@
                         $('button[type="submit"]').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Tahmin yapılıyor...');
                     },
                     success: function(response) {
-                        response.forEach(function(result, index) {
-                            var sentimentClass = result.sentiment > 0 ? 'sentiment-positive' : (result.sentiment < 0 ? 'sentiment-negative' : 'sentiment-neutral');
-                            var sentimentText = result.sentiment > 0 ? 'Pozitif' : (result.sentiment < 0 ? 'Negatif' : 'Nötr');
-                            var resultHtml = `
-                                <div class="card mb-4">
-                                    <div class="card-header">
-                                        <h5>${result.symbol} - ${result.company_name}</h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <p><strong>Son Fiyat:</strong> ${result.last_price.toFixed(2)} TRY</p>
-                                        <p><strong>Tahmin Edilen Fiyat:</strong> ${result.prediction.toFixed(2)} TRY</p>
-                                        <p><strong>Değişim:</strong> ${result.change.toFixed(2)}%</p>
-                                        <p><strong>Öngörü:</strong> ${result.recommendation}</p>
-                                        <p><strong>Duygu Analizi:</strong> <span class="${sentimentClass}">${sentimentText} (${result.sentiment.toFixed(2)})</span></p>
-                                        <div id="graph-${index}" class="graph"></div>
-                                    </div>
-                                </div>
-                            `;
-                            $('#results').append(resultHtml);
-                            Plotly.newPlot(`graph-${index}`, JSON.parse(result.graph));
-                        });
+                        resultsData = response; // Store results globally
+                        renderResults(response);
                     },
                     error: function() {
                         $('#results').html('<div class="alert alert-danger">Bir hata oluştu. Lütfen tekrar deneyin.</div>');
@@ -106,6 +234,112 @@
                     }
                 });
             });
+
+            // Render results based on current filter and sort settings
+            function renderResults(data) {
+                $('#results').empty();
+                let lang = $('#language-select').val();
+                data.forEach(function(result, index) {
+                    let sentimentClass = result.sentiment > 0 ? 'sentiment-positive' : (result.sentiment < 0 ? 'sentiment-negative' : 'sentiment-neutral');
+                    let sentimentText = result.sentiment > 0 ? translations[lang].positive : (result.sentiment < 0 ? translations[lang].negative : translations[lang].neutral);
+                    let resultHtml = `
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0">${result.symbol} - ${result.company_name}</h5>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>${translations[lang].lastPrice}</strong> ${result.last_price.toFixed(2)} TRY</p>
+                                <p><strong>${translations[lang].predictedPrice}</strong> ${result.prediction.toFixed(2)} TRY</p>
+                                <p><strong>${translations[lang].change}</strong> ${result.change.toFixed(2)}%</p>
+                                <p><strong>${translations[lang].forecast}</strong> ${result.recommendation}</p>
+                                <p><strong>${translations[lang].sentimentAnalysis}</strong> <span class="${sentimentClass}">${sentimentText} (${result.sentiment.toFixed(2)})</span></p>
+                                <div id="graph-${index}" class="graph"></div>
+                            </div>
+                        </div>
+                    `;
+                    $('#results').append(resultHtml);
+                    renderChart(result, index, $('#chart-metric').val());
+                });
+            }
+
+            // Filter results by sentiment
+            $('#filter-sentiment').change(function() {
+                let filter = $(this).val();
+                let filteredResults = resultsData.filter(function(result) {
+                    if (filter === 'all') return true;
+                    if (filter === 'positive') return result.sentiment > 0;
+                    if (filter === 'neutral') return result.sentiment === 0;
+                    if (filter === 'negative') return result.sentiment < 0;
+                });
+                renderResults(filteredResults);
+            });
+
+            // Sort results by predicted change
+            $('#sort-change').change(function() {
+                let sortOrder = $(this).val();
+                let sortedResults = [...resultsData];
+
+                if (sortOrder === 'asc') {
+                    sortedResults.sort((a, b) => a.change - b.change);
+                } else if (sortOrder === 'desc') {
+                    sortedResults.sort((a, b) => b.change - a.change);
+                }
+                renderResults(sortedResults);
+            });
+
+            // Chart rendering based on selected metric
+            $('#chart-metric').change(function() {
+                let metric = $(this).val();
+                resultsData.forEach(function(result, index) {
+                    let yData;
+                    if (metric === 'last_price') {
+                        yData = result.last_price_history;  // Assuming you have historical data
+                    } else if (metric === 'prediction') {
+                        yData = result.prediction_history;
+                    } else if (metric === 'change') {
+                        yData = result.change_history;
+                    }
+
+                    let graphData = [{
+                        x: result.date_history,  // Assuming you have a list of dates
+                        y: yData,
+                        type: 'scatter'
+                    }];
+                    Plotly.newPlot(`graph-${index}`, graphData, {responsive: true});
+                });
+            });
+
+            // Update the UI based on the selected language
+            function updateLanguage(lang) {
+                document.title = translations[lang].title;
+                $('h1').text(translations[lang].title);
+                $('label[for="filter-sentiment"]').text(translations[lang].filterSentiment);
+                $('label[for="sort-change"]').text(translations[lang].sortChange);
+                $('label[for="symbols"]').text(translations[lang].selectStocks);
+                $('button[type="submit"]').text(translations[lang].predict);
+                $('label[for="chart-metric"]').text(translations[lang].chartMetric);
+
+                $('#filter-sentiment option').each(function() {
+                    $(this).text(translations[lang][$(this).val()]);
+                });
+
+                $('#sort-change option').each(function() {
+                    $(this).text(translations[lang][$(this).val() === 'none' ? 'noSort' : $(this).val()]);
+                });
+
+                // Update the results if they exist
+                if (resultsData.length > 0) {
+                    renderResults(resultsData);
+                }
+            }
+
+            // Event listener for the language selector
+            $('#language-select').change(function() {
+                updateLanguage($(this).val());
+            });
+
+            // Call updateLanguage when the page loads
+            updateLanguage('tr'); // Default to Turkish
         });
     </script>
 </body>
