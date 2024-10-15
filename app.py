@@ -11,6 +11,15 @@ import plotly.graph_objs as go
 import json
 from utils.sentiment_analysis import analyze_stocks_sentiment
 
+RECOMMENDATIONS = {
+    'tr': {'buy': 'AL', 'hold': 'TUT', 'sell': 'SAT'},
+    'en': {'buy': 'BUY', 'hold': 'HOLD', 'sell': 'SELL'},
+    'fr': {'buy': 'ACHETER', 'hold': 'CONSERVER', 'sell': 'VENDRE'},
+    'de': {'buy': 'KAUFEN', 'hold': 'HALTEN', 'sell': 'VERKAUFEN'}
+}
+
+LANGUAGES = ['tr', 'en', 'fr', 'de']
+
 app = Flask(__name__)
 
 # BIST hisselerinin listesi ve şirket adları
@@ -96,9 +105,14 @@ def train_model(X_train, y_train):
 def index():
     return render_template('index.html', stocks=BIST_STOCKS)
 
-@app.route('/predict', methods=['POST'])
+@app.route('/api/predict', methods=['POST'])
 def predict():
-    symbols = request.form.getlist('symbols[]')
+    data = request.json
+    symbols = data['symbols']
+    lang = data.get('language', 'tr')  # Default to Turkish if not specified
+    if lang not in LANGUAGES:
+        lang = 'tr'  # Default to Turkish if invalid language is provided
+
     results = []
 
     sentiment_results = analyze_stocks_sentiment(BIST_STOCKS)
@@ -121,11 +135,11 @@ def predict():
         change_percent = ((prediction - last_price) / last_price) * 100
         
         if change_percent > 3:
-            recommendation = "AL"
+            recommendation = RECOMMENDATIONS[lang]['buy']
         elif change_percent < -3:
-            recommendation = "SAT"
+            recommendation = RECOMMENDATIONS[lang]['sell']
         else:
-            recommendation = "TUT"
+            recommendation = RECOMMENDATIONS[lang]['hold']
         
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=df.index, y=df['Close'], mode='lines', name='Gerçek Fiyat'))
@@ -157,4 +171,4 @@ def predict():
     return jsonify(results)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080, debug=True)
+    app.run(host='0.0.0.0', port=8082, debug=True)

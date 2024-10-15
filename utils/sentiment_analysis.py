@@ -12,9 +12,9 @@ load_dotenv()  # .env dosyasından çevre değişkenlerini yükle
 
 class SentimentAnalyzer:
     def __init__(self):
-        self.api_key = os.getenv('NEWS_API_KEY')
+        self.api_key = os.getenv('MARKETAUX_API_KEY')
         if not self.api_key:
-            raise ValueError("NEWS_API_KEY bulunamadı. .env dosyanızı kontrol edin.")
+            raise ValueError("MARKETAUX_API_KEY bulunamadı. .env dosyanızı kontrol edin.")
         self.base_url = "https://newsapi.org/v2/everything"
         self.newsapi = NewsApiClient(api_key=self.api_key)
         logging.basicConfig(level=logging.INFO)
