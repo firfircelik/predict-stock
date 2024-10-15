@@ -238,27 +238,26 @@
             // Render results based on current filter and sort settings
             function renderResults(data) {
                 $('#results').empty();
-                let lang = $('#language-select').val();
                 data.forEach(function(result, index) {
                     let sentimentClass = result.sentiment > 0 ? 'sentiment-positive' : (result.sentiment < 0 ? 'sentiment-negative' : 'sentiment-neutral');
-                    let sentimentText = result.sentiment > 0 ? translations[lang].positive : (result.sentiment < 0 ? translations[lang].negative : translations[lang].neutral);
+                    let sentimentText = result.sentiment > 0 ? 'Pozitif' : (result.sentiment < 0 ? 'Negatif' : 'Nötr');
                     let resultHtml = `
                         <div class="card">
                             <div class="card-header bg-primary text-white">
                                 <h5 class="mb-0">${result.symbol} - ${result.company_name}</h5>
                             </div>
                             <div class="card-body">
-                                <p><strong>${translations[lang].lastPrice}</strong> ${result.last_price.toFixed(2)} TRY</p>
-                                <p><strong>${translations[lang].predictedPrice}</strong> ${result.prediction.toFixed(2)} TRY</p>
-                                <p><strong>${translations[lang].change}</strong> ${result.change.toFixed(2)}%</p>
-                                <p><strong>${translations[lang].forecast}</strong> ${result.recommendation}</p>
-                                <p><strong>${translations[lang].sentimentAnalysis}</strong> <span class="${sentimentClass}">${sentimentText} (${result.sentiment.toFixed(2)})</span></p>
+                                <p><strong>Son Fiyat:</strong> ${result.last_price.toFixed(2)} TRY</p>
+                                <p><strong>Tahmin Edilen Fiyat:</strong> ${result.prediction.toFixed(2)} TRY</p>
+                                <p><strong>Değişim:</strong> ${result.change.toFixed(2)}%</p>
+                                <p><strong>Öngörü:</strong> ${result.recommendation}</p>
+                                <p><strong>Duygu Analizi:</strong> <span class="${sentimentClass}">${sentimentText} (${result.sentiment.toFixed(2)})</span></p>
                                 <div id="graph-${index}" class="graph"></div>
                             </div>
                         </div>
                     `;
                     $('#results').append(resultHtml);
-                    renderChart(result, index, $('#chart-metric').val());
+                    Plotly.newPlot(`graph-${index}`, JSON.parse(result.graph), {responsive: true});
                 });
             }
 
