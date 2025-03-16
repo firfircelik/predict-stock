@@ -1,4 +1,7 @@
 {
+  "buildCommand": "cd stock-predictor-app/frontend && npm install && npm run build",
+  "outputDirectory": "stock-predictor-app/frontend/.next",
+  "framework": "nextjs",
   "rewrites": [
     { 
       "source": "/api/:path*", 
