@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  # Backend API
+  api:
+    build: 
+      context: ./api
+    ports:
+      - "8000:8000"
+    environment:
+      - FINNHUB_API_KEY=${FINNHUB_API_KEY}
+    volumes:
+      - ./api:/app
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Frontend app
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        - API_URL=${API_URL:-http://api:8000}
+    ports:
+      - "3000:3000"
+    environment:
+      - API_URL=${API_URL:-http://api:8000}
+    depends_on:
+      - api
+    restart: always
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+
+  # Nginx for production
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - api
+      - frontend
+    restart: always 
