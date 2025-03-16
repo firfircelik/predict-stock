@@ -4,5 +4,12 @@
       "source": "/api/:path*", 
       "destination": "https://predict-stock-oqy3.onrender.com/api/:path*"
     }
+  ],
+  "redirects": [
+    {
+      "source": "/((?!_next/|api/).*)",
+      "destination": "/",
+      "statusCode": 200
+    }
   ]
 } 
