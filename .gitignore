@@ -1,1 +1,11 @@
 node_modules/
+*.log
+#.env
+#.env.local
+.DS_Store
+.next/
+.venv/
+dist/
+.mypy_cache/
+__pycache__/
+
