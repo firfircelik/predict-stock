@@ -11,5 +11,12 @@
   ],
   "env": {
     "API_URL": "https://predict-stock-oqy3.onrender.com"
+  },
+  "projectSettings": {
+    "framework": "nextjs",
+    "devCommand": "cd stock-predictor-app/frontend && npm run dev",
+    "buildCommand": "cd stock-predictor-app/frontend && npm run build",
+    "outputDirectory": "stock-predictor-app/frontend/.next",
+    "rootDirectory": "stock-predictor-app/frontend"
   }
 } 
