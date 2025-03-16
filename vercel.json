@@ -1,16 +1,8 @@
 {
-  "buildCommand": "cd stock-predictor-app/frontend && npm install && npm run build",
-  "outputDirectory": "stock-predictor-app/frontend/.next",
-  "installCommand": "cd stock-predictor-app/frontend && npm install",
-  "framework": "nextjs",
   "rewrites": [
     { 
       "source": "/api/:path*", 
       "destination": "https://predict-stock-oqy3.onrender.com/api/:path*"
     }
-  ],
-  "env": {
-    "API_URL": "https://predict-stock-oqy3.onrender.com"
-  },
-  "rootDirectory": "stock-predictor-app/frontend"
+  ]
 } 
