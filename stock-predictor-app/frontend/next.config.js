@@ -8,6 +8,11 @@ const nextConfig = {
   env: {
     API_URL: process.env.API_URL || 'http://localhost:8000',
   },
+  publicRuntimeConfig: {
+    API_URL: process.env.API_URL || 'http://localhost:8000',
+  },
+  // Vercel için output konfigürasyonu
+  output: 'standalone',
 }
 
 module.exports = nextConfig 

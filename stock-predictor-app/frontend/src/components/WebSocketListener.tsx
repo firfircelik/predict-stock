@@ -32,11 +32,20 @@ const WebSocketListener: React.FC<WebSocketListenerProps> = ({
 
   // WebSocket bağlantısını kur
   const connectWebSocket = useCallback(() => {
-    // WebSocket sunucu URL'sini belirle (API URL ile aynı domain'de olmalı)
+    // WebSocket sunucu URL'sini belirle
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || 'http://localhost:8000';
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = process.env.NEXT_PUBLIC_API_URL 
-      ? process.env.NEXT_PUBLIC_API_URL.replace(/^https?:/, protocol).replace('/api', '/ws')
-      : `${protocol}//${window.location.hostname}:8000/ws`;
+    
+    // Eğer tam URL belirtilmişse, protokolü değiştir
+    let wsUrl;
+    if (apiUrl.startsWith('http')) {
+      wsUrl = apiUrl.replace(/^https?:/, protocol).replace(/\/api$/, '') + '/ws';
+    } else {
+      // Protokolü olmayan URL için
+      wsUrl = `${protocol}//${apiUrl.replace(/\/api$/, '')}/ws`;
+    }
+    
+    console.log('Connecting to WebSocket at:', wsUrl);
     
     // Bağlantıyı kur
     const ws = new WebSocket(wsUrl);
