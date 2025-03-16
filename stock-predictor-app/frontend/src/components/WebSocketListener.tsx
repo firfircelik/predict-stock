@@ -32,104 +32,92 @@ const WebSocketListener: React.FC<WebSocketListenerProps> = ({
 
   // WebSocket bağlantısını kur
   const connectWebSocket = useCallback(() => {
-    // WebSocket sunucu URL'sini belirle
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || 'http://localhost:8000';
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    
-    // Eğer tam URL belirtilmişse, protokolü değiştir
-    let wsUrl;
-    if (apiUrl.startsWith('http')) {
-      wsUrl = apiUrl.replace(/^https?:/, protocol).replace(/\/api$/, '') + '/ws';
-    } else {
-      // Protokolü olmayan URL için
-      wsUrl = `${protocol}//${apiUrl.replace(/\/api$/, '')}/ws`;
-    }
-    
-    console.log('Connecting to WebSocket at:', wsUrl);
-    
-    // Bağlantıyı kur
-    const ws = new WebSocket(wsUrl);
-    
-    ws.onopen = () => {
-      setIsConnected(true);
-      console.log('WebSocket connected');
+    try {
+      // WebSocket sunucu URL'sini belirle
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || 'http://localhost:8000';
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       
-      // Belirtilen hisselere abone ol
-      const subscriptionMessage = {
-        action: 'subscribe',
-        symbols: symbols
-      };
-      ws.send(JSON.stringify(subscriptionMessage));
-      
-      toast({
-        title: 'Bildirim sistemi bağlandı',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-        position: 'bottom-right'
-      });
-    };
-    
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        
-        if (data.type === 'subscription_success') {
-          console.log(`Subscribed to: ${data.symbols.join(', ')}`);
-        }
-        else if (data.type === 'recommendation_change') {
-          // Tavsiye değişikliği bildirimi
-          const notification: Notification = {
-            id: Date.now().toString(),
-            type: 'recommendation_change',
-            symbol: data.symbol,
-            company: data.company,
-            message: `${data.company} (${data.symbol}) için tavsiye ${data.old_recommendation || 'HOLD'} -> ${data.new_recommendation}`,
-            timestamp: data.timestamp,
-            read: false,
-            details: data
-          };
-          
-          handleNewNotification(notification);
-        }
-        else if (data.type === 'error') {
-          console.error('WebSocket Error:', data.message);
-        }
-      } catch (error) {
-        console.error('Error parsing WebSocket message:', error);
+      // Eğer tam URL belirtilmişse, protokolü değiştir
+      let wsUrl;
+      if (apiUrl.startsWith('http')) {
+        wsUrl = apiUrl.replace(/^https?:/, protocol).replace(/\/api$/, '') + '/ws';
+      } else {
+        // Protokolü olmayan URL için
+        wsUrl = `${protocol}//${apiUrl.replace(/\/api$/, '')}/ws`;
       }
-    };
-    
-    ws.onclose = () => {
-      setIsConnected(false);
-      console.log('WebSocket disconnected');
       
-      // 5 saniye sonra yeniden bağlanmayı dene
-      setTimeout(() => {
-        if (wsRef.current?.readyState !== WebSocket.OPEN) {
-          connectWebSocket();
-        }
-      }, 5000);
-    };
-    
-    ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
-      ws.close();
-    };
-    
-    wsRef.current = ws;
-    
-    // Komponent unmount olduğunda bağlantıyı kapat
-    return () => {
-      if (ws.readyState === WebSocket.OPEN) {
-        const unsubscribeMessage = {
-          action: 'unsubscribe',
+      console.log('Connecting to WebSocket at:', wsUrl);
+      
+      // Bağlantıyı kur
+      const ws = new WebSocket(wsUrl);
+      
+      ws.onopen = () => {
+        setIsConnected(true);
+        console.log('WebSocket connected');
+        
+        // Belirtilen hisselere abone ol
+        const subscriptionMessage = {
+          action: 'subscribe',
           symbols: symbols
         };
-        ws.send(JSON.stringify(unsubscribeMessage));
-        ws.close();
-      }
-    };
+        ws.send(JSON.stringify(subscriptionMessage));
+        
+        // Bağlantı başarılı bildirimi göster
+        toast({
+          title: 'Gerçek zamanlı bildirimler etkinleştirildi',
+          description: 'Hisse senedi değişiklikleri için bildirimler alacaksınız',
+          status: 'success',
+          duration: 5000,
+          isClosable: true,
+          position: 'bottom-right',
+        });
+      };
+      
+      ws.onclose = (event) => {
+        setIsConnected(false);
+        console.log('WebSocket disconnected', event);
+        // 3 saniye sonra yeniden bağlanmayı dene
+        setTimeout(() => {
+          if (wsRef.current === ws) {
+            connectWebSocket();
+          }
+        }, 3000);
+      };
+      
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        // WebSocket hatası gizli kalacak, uygulamanın çalışması engellenmeyecek
+      };
+      
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          console.log('WebSocket message received:', data);
+          
+          // Mesaj tipine göre işlem yap
+          if (data.type === 'notification') {
+            handleNewNotification(data);
+          } else if (data.type === 'subscription_confirmation') {
+            console.log('Subscription confirmed for:', data.symbols);
+          }
+        } catch (error) {
+          console.error('Error processing WebSocket message:', error);
+        }
+      };
+      
+      wsRef.current = ws;
+      
+      // Component unmount olduğunda bağlantıyı kapat
+      return () => {
+        if (wsRef.current) {
+          wsRef.current.close();
+        }
+      };
+    } catch (error) {
+      console.error('Error initializing WebSocket:', error);
+      // WebSocket hatası gizli kalacak, uygulamanın çalışması engellenmeyecek
+      return () => {}; // Boş cleanup fonksiyonu döndür
+    }
   }, [symbols, toast]);
   
   // Yeni bildirim geldiğinde işle
