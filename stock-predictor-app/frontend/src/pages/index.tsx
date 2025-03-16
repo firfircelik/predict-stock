@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import Head from 'next/head';
 import { 
   Box, 
   Grid, 
@@ -19,7 +20,8 @@ import {
   TabPanel,
   Badge,
   Link,
-  Flex
+  Flex,
+  Button
 } from '@chakra-ui/react';
 import { ExternalLinkIcon } from '@chakra-ui/icons';
 import Layout from '@/components/Layout';
@@ -29,12 +31,37 @@ import { StockPrediction, ModelType, SentimentData, RecommendationResponse } fro
 import { predictStocks, getRecommendations } from '@/lib/api';
 import { SENTIMENT_COLORS, RECOMMENDATION_COLORS, RECOMMENDATION_ICONS } from '@/lib/constants';
 
+// Error Boundary bileşeni
+function ErrorFallback({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) {
+  return (
+    <Box
+      p={5}
+      m={5}
+      borderWidth={1}
+      borderRadius="lg"
+      bg="red.50"
+      color="red.800"
+    >
+      <Heading size="md">Bir şeyler yanlış gitti</Heading>
+      <Text mt={2}>Lütfen sayfayı yenileyin veya daha sonra tekrar deneyin.</Text>
+      <Text mt={2}>Hata: {error.message}</Text>
+      <Button 
+        mt={4} 
+        colorScheme="red" 
+        onClick={resetErrorBoundary}
+      >
+        Yeniden Dene
+      </Button>
+    </Box>
+  );
+}
+
 export default function Home() {
   const [predictions, setPredictions] = useState<StockPrediction[]>([]);
   const [recommendations, setRecommendations] = useState<RecommendationResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Error | null>(null);
   const [activeTab, setActiveTab] = useState(0);
 
   // Fetch recommendations on page load
@@ -52,7 +79,7 @@ export default function Home() {
       setPredictions(results);
     } catch (err) {
       console.error('Error predicting stocks:', err);
-      setError('Tahmin sırasında bir hata oluştu. Lütfen daha sonra tekrar deneyin.');
+      setError(err as Error);
     } finally {
       setIsLoading(false);
     }
@@ -65,6 +92,7 @@ export default function Home() {
       setRecommendations(results);
     } catch (err) {
       console.error('Error fetching recommendations:', err);
+      setError(err as Error);
     } finally {
       setIsLoadingRecommendations(false);
     }
@@ -147,6 +175,20 @@ export default function Home() {
     );
   };
 
+  // Hata durumunda hata bileşenini göster
+  if (error) {
+    return <ErrorFallback error={error} resetErrorBoundary={() => window.location.reload()} />;
+  }
+  
+  // Yükleme durumunda loading spinner göster
+  if (isLoading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minH="100vh">
+        <Spinner size="xl" color="blue.500" />
+      </Box>
+    );
+  }
+
   return (
     <Layout title="BIST Hisse Senedi Tahmin Uygulaması">
       <VStack spacing={8} align="stretch">
@@ -218,7 +260,7 @@ export default function Home() {
                     <Alert status="error" mb={4}>
                       <AlertIcon />
                       <AlertTitle>Hata!</AlertTitle>
-                      <AlertDescription>{error}</AlertDescription>
+                      <AlertDescription>{error instanceof Error ? error.message : String(error)}</AlertDescription>
                     </Alert>
                   )}
                   
