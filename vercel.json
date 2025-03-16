@@ -6,10 +6,10 @@
   "rewrites": [
     { 
       "source": "/api/:path*", 
-      "destination": "https://stock-predictor-api.onrender.com/api/:path*"
+      "destination": "https://predict-stock-oqy3.onrender.com/api/:path*"
     }
   ],
   "env": {
-    "API_URL": "https://stock-predictor-api.onrender.com"
+    "API_URL": "https://predict-stock-oqy3.onrender.com"
   }
 } 
